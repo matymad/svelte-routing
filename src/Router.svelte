@@ -29,7 +29,7 @@
     ? routerContext.routerBase
     : writable({
         path: basepath,
-        uri: basepath
+        uri: basepath,
       });
 
   const routerBase = derived([base, activeRoute], ([base, activeRoute]) => {
@@ -71,7 +71,7 @@
         hasActiveRoute = true;
       }
     } else {
-      routes.update(rs => {
+      routes.update((rs) => {
         rs.push(route);
         return rs;
       });
@@ -79,7 +79,7 @@
   }
 
   function unregisterRoute(route) {
-    routes.update(rs => {
+    routes.update((rs) => {
       const index = rs.indexOf(route);
       rs.splice(index, 1);
       return rs;
@@ -90,8 +90,8 @@
   // the basepath changes.
   $: {
     const { path: basepath } = $base;
-    routes.update(rs => {
-      rs.forEach(r => (r.path = combinePaths(basepath, r._path)));
+    routes.update((rs) => {
+      rs.forEach((r) => (r.path = combinePaths(basepath, r._path)));
       return rs;
     });
   }
@@ -100,7 +100,17 @@
   // will not find an active Route in SSR and in the browser it will only
   // pick an active Route after all Routes have been registered.
   $: {
-    const bestMatch = pick($routes, $location.pathname);
+    let url = $location.pathname;
+    if ($location.href.includes("#!")) {
+      url = $location.hash.replace("#!", "");
+    }
+
+    $routes = $routes.map((route) => {
+      route.path = route.path.replace("#!", "");
+      return route;
+    });
+
+    const bestMatch = pick($routes, url);
     activeRoute.set(bestMatch);
   }
 
@@ -108,7 +118,7 @@
     // The topmost Router in the tree is responsible for updating
     // the location store and supplying it through context.
     onMount(() => {
-      const unlisten = globalHistory.listen(history => {
+      const unlisten = globalHistory.listen((history) => {
         location.set(history.location);
       });
 
@@ -123,8 +133,8 @@
     base,
     routerBase,
     registerRoute,
-    unregisterRoute
+    unregisterRoute,
   });
 </script>
 
-<slot></slot>
+<slot />
